@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="com.mtriff.cordova.muse.plugin"
+    version="0.2.13">
+    <name>Muse</name>
+    <description>Cordova Muse Plugin</description>
+    <keywords>cordova,muse</keywords>
+    <js-module src="www/muse.js" name="muse">
+        <clobbers target="muse" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="Muse" >
+                <param name="android-package" value="com.mtriff.cordova.muse.plugin.Plugin"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/libs/libmuseandroid.jar" target-dir="libs" />
+        <source-file src="src/android/libs/x86/libmuse_android.so" target-dir="libs/x86/" />
+        <source-file src="src/android/libs/armeabi/libmuse_android.so" target-dir="libs/armeabi/" />
+
+        <source-file src="src/android/Plugin.java" target-dir="src/com/mtriff/cordova/muse/plugin/" />
+
+    </platform>
+
+</plugin>
