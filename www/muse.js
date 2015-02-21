@@ -58,4 +58,10 @@ Muse.prototype.getBlink = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Muse", "getBlink", []);
 }
 
+Muse.prototype.testConnection = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "testConnection", []);
+}
+
+
+
 module.exports = new Muse();

@@ -48,6 +48,8 @@ public class Plugin extends CordovaPlugin {
 
     private List<String> blink;
 
+    private List<Double> horseshoe;
+
     class ConnectionListener extends MuseConnectionListener {
 
         CallbackContext callbackContext;
@@ -95,8 +97,9 @@ public class Plugin extends CordovaPlugin {
         @Override
         public void receiveMuseDataPacket(MuseDataPacket p) {
             Log.v(TAG, "Received data packet of type " + p.getPacketType() + " recordData set to " + recordData);
-            if(recordData) {
-                switch (p.getPacketType()) {
+            MuseDataPacketType packetType = p.getPacketType();
+            if(recordData || packetType == MuseDataPacketType.HORSESHOE) {
+                switch (packetType) {
                     case EEG:
                         updateEeg(p.getValues());
                         break;
@@ -105,6 +108,9 @@ public class Plugin extends CordovaPlugin {
                         break;
                     case ALPHA_RELATIVE:
                         updateAlphaRelative(p.getValues());
+                        break;
+                    case HORSESHOE:
+                        updateHorseshoe(p.getValues());
                         break;
                     default:
                         break;
@@ -150,6 +156,10 @@ public class Plugin extends CordovaPlugin {
                 "%6.2f", data.get(Eeg.FP2.ordinal())));
             alpha_rel_4.add(String.format(
                 "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+
+        private void updateHorseshoe(final ArrayList<Double> data) {
+            horseshoe = data;
         }
     }
 
@@ -261,7 +271,50 @@ public class Plugin extends CordovaPlugin {
             Log.v(TAG, "Returning array of length " + blink.size());
             Log.v(TAG, "First value is " + blink.get(0));
             callbackContext.success(new JSONArray(blink));
-        } 
+        } else if (action.equals("testConnection")) {
+            if (horseshoe == null) {
+                callbackContext.error("No connection data received.");
+            }
+            Log.v(TAG, "Connection data is " + horseshoe.toString());
+            String status = "Left Ear - ";
+            Double value = horseshoe.get(0);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            status += "\nLeft Forehead - ";
+            value = horseshoe.get(1);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            status += "\nRight Forehead - ";
+            value = horseshoe.get(2);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            status += "\nRight Ear - ";
+            value = horseshoe.get(3);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            toastLong(status);
+            callbackContext.success(status);
+        }
         else {
             return false;
         }
@@ -302,6 +355,8 @@ public class Plugin extends CordovaPlugin {
                                                   MuseDataPacketType.EEG);
                         muse.registerDataListener(dataListener,
                                                   MuseDataPacketType.ALPHA_RELATIVE);
+                        muse.registerDataListener(dataListener,
+                                                  MuseDataPacketType.HORSESHOE);
                         muse.registerDataListener(dataListener,
                                                   MuseDataPacketType.ARTIFACTS);
                         museToConnect.enableDataTransmission(true);
