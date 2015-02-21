@@ -193,15 +193,11 @@ public class Plugin extends CordovaPlugin {
                 callbackContext.success(jsonMuseList);
             }
         } else if (action.equals("connectToMuse")) {
-            // if (args.size() > 0) {
-                // call connectToMuse(args[0])
-            // } else {
             connectToMuse(callbackContext);
-            // if ()
-            // }
-            // callbackContext.success(returnMessage);
         } else if (action.equals("disconnectMuse")) {
             disconnectMuse();
+            toastShort("Disconnected " + connectedMuse.getMacAddress());
+            connectedMuse = null;
             callbackContext.success("Disconnected.");
         } else if (action.equals("startRecording")) {
             startRecording();
@@ -215,10 +211,57 @@ public class Plugin extends CordovaPlugin {
             if (acc_forward_backward == null) {
                 callbackContext.error("No data has been recorded.");
             }
-            Log.i(TAG, "Returning array of length " + acc_forward_backward.size());
-            Log.i(TAG, "First value is " + acc_forward_backward.get(0));
             callbackContext.success(new JSONArray(acc_forward_backward));
-        }
+        } else if (action.equals("getAccLeftRight")) {
+            if (acc_left_right == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + acc_left_right.size());
+            Log.v(TAG, "First value is " + acc_left_right.get(0));
+            callbackContext.success(new JSONArray(acc_left_right));
+        } else if (action.equals("getAccUpDown")) {
+            if (acc_up_down == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + acc_up_down.size());
+            Log.v(TAG, "First value is " + acc_up_down.get(0));
+            callbackContext.success(new JSONArray(acc_up_down));
+        } else if (action.equals("getEegLeftEar")) {
+            if (eeg_left_ear == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + eeg_left_ear.size());
+            Log.v(TAG, "First value is " + eeg_left_ear.get(0));
+            callbackContext.success(new JSONArray(eeg_left_ear));
+        } else if (action.equals("getEegRightEar")) {
+            if (eeg_right_ear == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + eeg_right_ear.size());
+            Log.v(TAG, "First value is " + eeg_right_ear.get(0));
+            callbackContext.success(new JSONArray(eeg_right_ear));
+        } else if (action.equals("getEegLeftForehead")) {
+            if (eeg_left_forehead == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + eeg_left_forehead.size());
+            Log.v(TAG, "First value is " + eeg_left_forehead.get(0));
+            callbackContext.success(new JSONArray(eeg_left_forehead));
+        } else if (action.equals("getEegRightForehead")) {
+            if (eeg_right_forehead == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + eeg_right_forehead.size());
+            Log.v(TAG, "First value is " + eeg_right_forehead.get(0));
+            callbackContext.success(new JSONArray(eeg_right_forehead));
+        } else if (action.equals("getBlink")) {
+            if (blink == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + blink.size());
+            Log.v(TAG, "First value is " + blink.get(0));
+            callbackContext.success(new JSONArray(blink));
+        } 
         else {
             return false;
         }
@@ -268,7 +311,6 @@ public class Plugin extends CordovaPlugin {
                             cordova.getThreadPool().execute(new Runnable() {
                                 public void run() {
                                     museToConnect.runAsynchronously();
-                                    // museToConnect.connect();
                                 }
                             });
                         } catch (Exception e) {

@@ -26,8 +26,36 @@ Muse.prototype.stopRecording = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Muse", "stopRecording", []);
 }
 
+Muse.prototype.getAccLeftRight = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getAccLeftRight", []);
+}
+
 Muse.prototype.getAccForwardBackward = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Muse", "getAccForwardBackward", []);
+}
+
+Muse.prototype.getAccUpDown = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getAccUpDown", []);
+}
+
+Muse.prototype.getEegLeftEar = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getEegLeftEar", []);
+}
+
+Muse.prototype.getEegRightEar = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getEegRightEar", []);
+}
+
+Muse.prototype.getEegLeftForehead = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getEegLeftForehead", []);
+}
+
+Muse.prototype.getEegRightForehead = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getEegRightForehead", []);
+}
+
+Muse.prototype.getBlink = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getBlink", []);
 }
 
 module.exports = new Muse();
