@@ -2,7 +2,10 @@ package com.mtriff.cordova.muse.plugin;
 
 import java.util.TimeZone;
 import java.util.List;
+import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CallbackContext;
@@ -14,24 +17,36 @@ import org.json.JSONObject;
 
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.interaxon.libmuse.*;
 
 public class Plugin extends CordovaPlugin {
     public static final String TAG = "MUSE";
 
-    public static String platform;                            // Device OS
-    public static String uuid;                                // Device UUID
-
-    private static final String ANDROID_PLATFORM = "Android";
-    private static final String AMAZON_PLATFORM = "amazon-fireos";
-    private static final String AMAZON_DEVICE = "Amazon";
-
     private Muse connectedMuse;
     private List<Muse> pairedMuses;
 
     private ConnectionListener connectionListener;
+    private DataListener dataListener;
+    private boolean recordData;
 
+    // Data Packets
+    private List<String> acc_forward_backward;
+    private List<String> acc_up_down;
+    private List<String> acc_left_right;
+
+    private List<String> eeg_left_ear;
+    private List<String> eeg_left_forehead;
+    private List<String> eeg_right_forehead;
+    private List<String> eeg_right_ear;
+
+    private List<String> alpha_rel_1;
+    private List<String> alpha_rel_2;
+    private List<String> alpha_rel_3;
+    private List<String> alpha_rel_4;
+
+    private List<String> blink;
 
     class ConnectionListener extends MuseConnectionListener {
 
@@ -54,13 +69,89 @@ public class Plugin extends CordovaPlugin {
             Log.i(TAG, full);
             if (current == ConnectionState.CONNECTED) {
                 Log.i(TAG, "Muse connected");
+                toastShort("Connected to " + p.getSource().getMacAddress());
                 callbackContext.success("Connected to " + p.getSource().getMacAddress());
             }
-                // return "Not connected, connection status is: " + muse.getConnectionState();
+            // return "Not connected, connection status is: " + muse.getConnectionState();
+        }
+
+        private void toastShort(final String message) {
+            try {
+                cordova.getActivity().runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(cordova.getActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (Exception ex) {
+                Log.e(TAG, ex.getMessage());
+            }
         }
     }
 
+    class DataListener extends MuseDataListener {
+        DataListener() {
+        }
 
+        @Override
+        public void receiveMuseDataPacket(MuseDataPacket p) {
+            Log.v(TAG, "Received data packet of type " + p.getPacketType() + " recordData set to " + recordData);
+            if(recordData) {
+                switch (p.getPacketType()) {
+                    case EEG:
+                        updateEeg(p.getValues());
+                        break;
+                    case ACCELEROMETER:
+                        updateAccelerometer(p.getValues());
+                        break;
+                    case ALPHA_RELATIVE:
+                        updateAlphaRelative(p.getValues());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        @Override
+        public void receiveMuseArtifactPacket(MuseArtifactPacket p) {
+            if (p.getHeadbandOn() && p.getBlink()) {
+                Log.i(TAG, "blink");
+                Calendar cal = Calendar.getInstance();
+                blink.add("" + cal.getTimeInMillis());
+            }
+        }
+
+        private void updateAccelerometer(final ArrayList<Double> data) {
+            acc_forward_backward.add(String.format(
+                "%6.2f", data.get(Accelerometer.FORWARD_BACKWARD.ordinal())));
+            acc_up_down.add(String.format(
+                "%6.2f", data.get(Accelerometer.UP_DOWN.ordinal())));
+            acc_left_right.add(String.format(
+                "%6.2f", data.get(Accelerometer.LEFT_RIGHT.ordinal())));
+        }
+
+        private void updateEeg(final ArrayList<Double> data) {
+            eeg_left_ear.add(String.format(
+                "%6.2f", data.get(Eeg.TP9.ordinal())));
+            eeg_left_forehead.add(String.format(
+                "%6.2f", data.get(Eeg.FP1.ordinal())));
+            eeg_right_forehead.add(String.format(
+                "%6.2f", data.get(Eeg.FP2.ordinal())));
+            eeg_right_ear.add(String.format(
+                "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+
+        private void updateAlphaRelative(final ArrayList<Double> data) {
+            alpha_rel_1.add(String.format(
+                "%6.2f", data.get(Eeg.TP9.ordinal())));
+            alpha_rel_2.add(String.format(
+                "%6.2f", data.get(Eeg.FP1.ordinal())));
+            alpha_rel_3.add(String.format(
+                "%6.2f", data.get(Eeg.FP2.ordinal())));
+            alpha_rel_4.add(String.format(
+                "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+    }
 
 
     /**
@@ -68,6 +159,7 @@ public class Plugin extends CordovaPlugin {
      */
     public Plugin() {
         connectionListener = new ConnectionListener();
+        dataListener = new DataListener();
         Log.i(TAG, "libmuse version=" + LibMuseVersion.SDK_VERSION);
     }
 
@@ -80,7 +172,6 @@ public class Plugin extends CordovaPlugin {
      */
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
-        Plugin.uuid = getUuid();
 
         getMuseList();
     }
@@ -95,19 +186,7 @@ public class Plugin extends CordovaPlugin {
      */
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
         Log.i(TAG, "Action received: " + action);
-        if (action.equals("getDeviceInfo")) {
-            JSONObject r = new JSONObject();
-            r.put("uuid", Plugin.uuid);
-            r.put("version", this.getOSVersion());
-            r.put("platform", this.getPlatform());
-            r.put("model", this.getModel());
-            if (pairedMuses.size() != 0) {
-                r.put("muse", pairedMuses.get(0).getMacAddress());
-            } else {
-                r.put("muse", "No muse attached");
-            }
-            callbackContext.success(r);
-        } else if (action.equals("getMuseList")) {
+        if (action.equals("getMuseList")) {
             String[] museList = getMuseList();
             if (museList != null) {
                 JSONArray jsonMuseList = new JSONArray(Arrays.asList(museList));
@@ -124,6 +203,21 @@ public class Plugin extends CordovaPlugin {
         } else if (action.equals("disconnectMuse")) {
             disconnectMuse();
             callbackContext.success("Disconnected.");
+        } else if (action.equals("startRecording")) {
+            startRecording();
+            toastShort("Started Recording");
+            callbackContext.success("Started Recording");
+        } else if (action.equals("stopRecording")) {
+            stopRecording();
+            toastShort("Stopped Recording");
+            callbackContext.success("Stopped Recording");
+        } else if (action.equals("getAccForwardBackward")) {
+            if (acc_forward_backward == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.i(TAG, "Returning array of length " + acc_forward_backward.size());
+            Log.i(TAG, "First value is " + acc_forward_backward.get(0));
+            callbackContext.success(new JSONArray(acc_forward_backward));
         }
         else {
             return false;
@@ -159,9 +253,17 @@ public class Plugin extends CordovaPlugin {
                         final Muse museToConnect = muse;
                         museToConnect.setPreset(MusePreset.PRESET_14);
                         museToConnect.registerConnectionListener(connectionListener);
+                        muse.registerDataListener(dataListener,
+                                                  MuseDataPacketType.ACCELEROMETER);
+                        muse.registerDataListener(dataListener,
+                                                  MuseDataPacketType.EEG);
+                        muse.registerDataListener(dataListener,
+                                                  MuseDataPacketType.ALPHA_RELATIVE);
+                        muse.registerDataListener(dataListener,
+                                                  MuseDataPacketType.ARTIFACTS);
                         museToConnect.enableDataTransmission(true);
                         Log.i(TAG, "Connecting...");
-                        
+                        toastShort("Connecting...");
                         try {
                             cordova.getThreadPool().execute(new Runnable() {
                                 public void run() {
@@ -195,76 +297,39 @@ public class Plugin extends CordovaPlugin {
             connectedMuse.disconnect(true);
         }
     }
-    // private String executeMuse
 
-    // Device
-
-    /**
-     * Get the OS name.
-     * 
-     * @return
-     */
-    public String getPlatform() {
-        String platform;
-        if (isAmazonDevice()) {
-            platform = AMAZON_PLATFORM;
-        } else {
-            platform = ANDROID_PLATFORM;
-        }
-        return platform;
+    private void startRecording() {
+        resetDataPacketLists();
+        recordData = true;
     }
 
-    /**
-     * Get the device's Universally Unique Identifier (UUID).
-     *
-     * @return
-     */
-    public String getUuid() {
-        String uuid = Settings.Secure.getString(this.cordova.getActivity().getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-        return uuid;
+    private void stopRecording() {
+        recordData = false;
     }
 
-    public String getModel() {
-        String model = android.os.Build.MODEL;
-        return model;
+    private void resetDataPacketLists() {
+        acc_forward_backward = new LinkedList<String>();
+        acc_up_down = new LinkedList<String>();
+        acc_left_right = new LinkedList<String>();
+
+        eeg_left_ear = new LinkedList<String>();
+        eeg_left_forehead = new LinkedList<String>();
+        eeg_right_forehead = new LinkedList<String>();
+        eeg_right_ear = new LinkedList<String>();
+
+        alpha_rel_1 = new LinkedList<String>();
+        alpha_rel_2 = new LinkedList<String>();
+        alpha_rel_3 = new LinkedList<String>();
+        alpha_rel_4 = new LinkedList<String>();
+
+        blink = new LinkedList<String>();
     }
 
-    public String getProductName() {
-        String productname = android.os.Build.PRODUCT;
-        return productname;
+    private void toastLong(String message) {
+        Toast.makeText(cordova.getActivity().getApplicationContext(), message, Toast.LENGTH_LONG).show();
     }
 
-    /**
-     * Get the OS version.
-     *
-     * @return
-     */
-    public String getOSVersion() {
-        String osversion = android.os.Build.VERSION.RELEASE;
-        return osversion;
+    private void toastShort(String message) {
+        Toast.makeText(cordova.getActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
-
-    public String getSDKVersion() {
-        @SuppressWarnings("deprecation")
-        String sdkversion = android.os.Build.VERSION.SDK;
-        return sdkversion;
-    }
-
-    public String getTimeZoneID() {
-        TimeZone tz = TimeZone.getDefault();
-        return (tz.getID());
-    }
-
-    /**
-     * Function to check if the device is manufactured by Amazon
-     * 
-     * @return
-     */
-    public boolean isAmazonDevice() {
-        if (android.os.Build.MANUFACTURER.equals(AMAZON_DEVICE)) {
-            return true;
-        }
-        return false;
-    }
-
 }
