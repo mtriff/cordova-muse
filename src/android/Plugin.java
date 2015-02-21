@@ -30,10 +30,45 @@ public class Plugin extends CordovaPlugin {
     private Muse connectedMuse;
     private List<Muse> pairedMuses;
 
+    private ConnectionListener connectionListener;
+
+
+    class ConnectionListener extends MuseConnectionListener {
+
+        CallbackContext callbackContext;
+
+        ConnectionListener() {
+        }
+        
+        public void setCallbackContext(CallbackContext callbackContext) {
+            this.callbackContext = callbackContext;
+        }
+
+        @Override
+        public void receiveMuseConnectionPacket(MuseConnectionPacket p) {
+            final ConnectionState current = p.getCurrentConnectionState();
+            final String status = p.getPreviousConnectionState().toString() +
+                         " -> " + current;
+            final String full = "Muse " + p.getSource().getMacAddress() +
+                                " " + status;
+            Log.i(TAG, full);
+            if (current == ConnectionState.CONNECTED) {
+                Log.i(TAG, "Muse connected");
+                callbackContext.success("Connected to " + p.getSource().getMacAddress());
+            }
+                // return "Not connected, connection status is: " + muse.getConnectionState();
+        }
+    }
+
+
+
+
     /**
      * Constructor.
      */
     public Plugin() {
+        connectionListener = new ConnectionListener();
+        Log.i(TAG, "libmuse version=" + LibMuseVersion.SDK_VERSION);
     }
 
     /**
@@ -58,7 +93,8 @@ public class Plugin extends CordovaPlugin {
      * @param callbackContext   The callback id used when calling back into JavaScript.
      * @return                  True if the action was valid, false if not.
      */
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
+        Log.i(TAG, "Action received: " + action);
         if (action.equals("getDeviceInfo")) {
             JSONObject r = new JSONObject();
             r.put("uuid", Plugin.uuid);
@@ -77,6 +113,17 @@ public class Plugin extends CordovaPlugin {
                 JSONArray jsonMuseList = new JSONArray(Arrays.asList(museList));
                 callbackContext.success(jsonMuseList);
             }
+        } else if (action.equals("connectToMuse")) {
+            // if (args.size() > 0) {
+                // call connectToMuse(args[0])
+            // } else {
+            connectToMuse(callbackContext);
+            // if ()
+            // }
+            // callbackContext.success(returnMessage);
+        } else if (action.equals("disconnectMuse")) {
+            disconnectMuse();
+            callbackContext.success("Disconnected.");
         }
         else {
             return false;
@@ -97,9 +144,59 @@ public class Plugin extends CordovaPlugin {
         for (int i = 0; i < pairedMuses.size(); i++) {
             museMacs[i] = pairedMuses.get(i).getMacAddress();
         }
+        Log.i(TAG, "Found " + pairedMuses.size() + " paired muse devices.");
         return museMacs;
     }
+
+    private String connectToMuse(String macAddress, CallbackContext callbackContext) {
+        for (Muse muse : pairedMuses) {
+            if (muse.getMacAddress().equals(macAddress)) {
+                try {
+                    ConnectionState state = muse.getConnectionState();
+                    Log.i(TAG, "ConnectionState: " + state.toString());
+                    if (true || state != ConnectionState.CONNECTED && state != ConnectionState.CONNECTING) {
+                        connectionListener.setCallbackContext(callbackContext);
+                        final Muse museToConnect = muse;
+                        museToConnect.setPreset(MusePreset.PRESET_14);
+                        museToConnect.registerConnectionListener(connectionListener);
+                        museToConnect.enableDataTransmission(true);
+                        Log.i(TAG, "Connecting...");
+                        
+                        try {
+                            cordova.getThreadPool().execute(new Runnable() {
+                                public void run() {
+                                    museToConnect.runAsynchronously();
+                                    // museToConnect.connect();
+                                }
+                            });
+                        } catch (Exception e) {
+                            Log.e(TAG, e.toString());
+                        }
+                        connectedMuse = muse;                        
+                    } else {
+                        Log.i(TAG, "Device is already connected or is connecting." + state);
+                        callbackContext.success(state.toString());
+                    }
+                } catch(Exception ex) {
+                    return ex.getMessage();
+                }
+            }
+        }
+        return "Unable to find " + macAddress + " device.  Check to make sure this device is connected.";
+    }
+
+    private String connectToMuse(CallbackContext callbackContext) {
+        getMuseList();
+        return connectToMuse(pairedMuses.get(0).getMacAddress(), callbackContext);
+    }
     
+    private void disconnectMuse() {
+        if (connectedMuse != null) {
+            connectedMuse.disconnect(true);
+        }
+    }
+    // private String executeMuse
+
     // Device
 
     /**

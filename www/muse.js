@@ -65,4 +65,12 @@ Muse.prototype.getMuseList = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Muse", "getMuseList", []);
 }
 
+Muse.prototype.connectToMuse = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "connectToMuse", []);
+}
+
+Muse.prototype.disconnectMuse = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "disconnectMuse", []);
+}
+
 module.exports = new Muse();
