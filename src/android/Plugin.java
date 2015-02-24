@@ -45,6 +45,21 @@ public class Plugin extends CordovaPlugin {
     private List<String> alpha_rel_2;
     private List<String> alpha_rel_3;
     private List<String> alpha_rel_4;
+    
+    private List<String> beta_rel_1;
+    private List<String> beta_rel_2;
+    private List<String> beta_rel_3;
+    private List<String> beta_rel_4;
+    
+    private List<String> theta_rel_1;
+    private List<String> theta_rel_2;
+    private List<String> theta_rel_3;
+    private List<String> theta_rel_4;
+
+    private List<String> gamma_rel_1;
+    private List<String> gamma_rel_2;
+    private List<String> gamma_rel_3;
+    private List<String> gamma_rel_4;
 
     private List<String> blink;
 
@@ -73,6 +88,8 @@ public class Plugin extends CordovaPlugin {
                 Log.i(TAG, "Muse connected");
                 toastShort("Connected to " + p.getSource().getMacAddress());
                 callbackContext.success("Connected to " + p.getSource().getMacAddress());
+            } else if (current == ConnectionState.DISCONNECTED) {
+                horseshoe = null;
             }
             // return "Not connected, connection status is: " + muse.getConnectionState();
         }
@@ -108,6 +125,15 @@ public class Plugin extends CordovaPlugin {
                         break;
                     case ALPHA_RELATIVE:
                         updateAlphaRelative(p.getValues());
+                        break;
+                    case BETA_RELATIVE:
+                        updateBetaRelative(p.getValues());
+                        break;
+                    case THETA_RELATIVE:
+                        updateThetaRelative(p.getValues());
+                        break;
+                    case GAMMA_RELATIVE:
+                        updateGammaRelative(p.getValues());
                         break;
                     case HORSESHOE:
                         updateHorseshoe(p.getValues());
@@ -155,6 +181,39 @@ public class Plugin extends CordovaPlugin {
             alpha_rel_3.add(String.format(
                 "%6.2f", data.get(Eeg.FP2.ordinal())));
             alpha_rel_4.add(String.format(
+                "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+
+        private void updateBetaRelative(final ArrayList<Double> data) {
+            beta_rel_1.add(String.format(
+                "%6.2f", data.get(Eeg.TP9.ordinal())));
+            beta_rel_2.add(String.format(
+                "%6.2f", data.get(Eeg.FP1.ordinal())));
+            beta_rel_3.add(String.format(
+                "%6.2f", data.get(Eeg.FP2.ordinal())));
+            beta_rel_4.add(String.format(
+                "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+
+        private void updateThetaRelative(final ArrayList<Double> data) {
+            theta_rel_1.add(String.format(
+                "%6.2f", data.get(Eeg.TP9.ordinal())));
+            theta_rel_2.add(String.format(
+                "%6.2f", data.get(Eeg.FP1.ordinal())));
+            theta_rel_3.add(String.format(
+                "%6.2f", data.get(Eeg.FP2.ordinal())));
+            theta_rel_4.add(String.format(
+                "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+
+        private void updateGammaRelative(final ArrayList<Double> data) {
+            gamma_rel_1.add(String.format(
+                "%6.2f", data.get(Eeg.TP9.ordinal())));
+            gamma_rel_2.add(String.format(
+                "%6.2f", data.get(Eeg.FP1.ordinal())));
+            gamma_rel_3.add(String.format(
+                "%6.2f", data.get(Eeg.FP2.ordinal())));
+            gamma_rel_4.add(String.format(
                 "%6.2f", data.get(Eeg.TP10.ordinal())));
         }
 
@@ -264,6 +323,118 @@ public class Plugin extends CordovaPlugin {
             Log.v(TAG, "Returning array of length " + eeg_right_forehead.size());
             Log.v(TAG, "First value is " + eeg_right_forehead.get(0));
             callbackContext.success(new JSONArray(eeg_right_forehead));
+        } else if (action.equals("getAlphaRelativeChannel1")) {
+            if (alpha_rel_1 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + alpha_rel_1.size());
+            Log.v(TAG, "First value is " + alpha_rel_1.get(0));
+            callbackContext.success(new JSONArray(alpha_rel_1));
+        } else if (action.equals("getAlphaRelativeChannel2")) {
+            if (alpha_rel_2 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + alpha_rel_2.size());
+            Log.v(TAG, "First value is " + alpha_rel_2.get(0));
+            callbackContext.success(new JSONArray(alpha_rel_2));
+        } else if (action.equals("getAlphaRelativeChannel3")) {
+            if (alpha_rel_3 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + alpha_rel_3.size());
+            Log.v(TAG, "First value is " + alpha_rel_3.get(0));
+            callbackContext.success(new JSONArray(alpha_rel_3));
+        } else if (action.equals("getAlphaRelativeChannel4")) {
+            if (alpha_rel_4 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + alpha_rel_4.size());
+            Log.v(TAG, "First value is " + alpha_rel_4.get(0));
+            callbackContext.success(new JSONArray(alpha_rel_4));
+        } else if (action.equals("getBetaRelativeChannel1")) {
+            if (beta_rel_1 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + beta_rel_1.size());
+            Log.v(TAG, "First value is " + beta_rel_1.get(0));
+            callbackContext.success(new JSONArray(beta_rel_1));
+        } else if (action.equals("getBetaRelativeChannel2")) {
+            if (beta_rel_2 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + beta_rel_2.size());
+            Log.v(TAG, "First value is " + beta_rel_2.get(0));
+            callbackContext.success(new JSONArray(beta_rel_2));
+        } else if (action.equals("getBetaRelativeChannel3")) {
+            if (beta_rel_3 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + beta_rel_3.size());
+            Log.v(TAG, "First value is " + beta_rel_3.get(0));
+            callbackContext.success(new JSONArray(beta_rel_3));
+        } else if (action.equals("getBetaRelativeChannel4")) {
+            if (beta_rel_4 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + beta_rel_4.size());
+            Log.v(TAG, "First value is " + beta_rel_4.get(0));
+            callbackContext.success(new JSONArray(beta_rel_4));
+        } else if (action.equals("getThetaRelativeChannel1")) {
+            if (theta_rel_1 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + theta_rel_1.size());
+            Log.v(TAG, "First value is " + theta_rel_1.get(0));
+            callbackContext.success(new JSONArray(theta_rel_1));
+        } else if (action.equals("getThetaRelativeChannel2")) {
+            if (theta_rel_2 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + theta_rel_2.size());
+            Log.v(TAG, "First value is " + theta_rel_2.get(0));
+            callbackContext.success(new JSONArray(theta_rel_2));
+        } else if (action.equals("getThetaRelativeChannel3")) {
+            if (theta_rel_3 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + theta_rel_3.size());
+            Log.v(TAG, "First value is " + theta_rel_3.get(0));
+            callbackContext.success(new JSONArray(theta_rel_3));
+        } else if (action.equals("getThetaRelativeChannel4")) {
+            if (theta_rel_4 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + theta_rel_4.size());
+            Log.v(TAG, "First value is " + theta_rel_4.get(0));
+            callbackContext.success(new JSONArray(theta_rel_4));
+        } else if (action.equals("getGammaRelativeChannel1")) {
+            if (gamma_rel_1 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + gamma_rel_1.size());
+            Log.v(TAG, "First value is " + gamma_rel_1.get(0));
+            callbackContext.success(new JSONArray(gamma_rel_1));
+        } else if (action.equals("getGammaRelativeChannel2")) {
+            if (gamma_rel_2 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + gamma_rel_2.size());
+            Log.v(TAG, "First value is " + gamma_rel_2.get(0));
+            callbackContext.success(new JSONArray(gamma_rel_2));
+        } else if (action.equals("getGammaRelativeChannel3")) {
+            if (gamma_rel_3 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + gamma_rel_3.size());
+            Log.v(TAG, "First value is " + gamma_rel_3.get(0));
+            callbackContext.success(new JSONArray(gamma_rel_3));
+        } else if (action.equals("getGammaRelativeChannel4")) {
+            if (gamma_rel_4 == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + gamma_rel_4.size());
+            Log.v(TAG, "First value is " + gamma_rel_4.get(0));
+            callbackContext.success(new JSONArray(gamma_rel_4));
         } else if (action.equals("getBlink")) {
             if (blink == null) {
                 callbackContext.error("No data has been recorded.");
@@ -271,6 +442,41 @@ public class Plugin extends CordovaPlugin {
             Log.v(TAG, "Returning array of length " + blink.size());
             Log.v(TAG, "First value is " + blink.get(0));
             callbackContext.success(new JSONArray(blink));
+        } else if (action.equals("getRecordingData")) {
+            JSONObject recordingData = new JSONObject();
+            recordingData.put("ACC_LEFT_RIGHT", new JSONArray(acc_left_right));
+            recordingData.put("ACC_FORWARD_BACKWARD", new JSONArray(acc_forward_backward));
+            recordingData.put("ACC_UP_DOWN", new JSONArray(acc_up_down));
+            
+            recordingData.put("EEG_LEFT_EAR", new JSONArray(eeg_left_ear));
+            recordingData.put("EEG_RIGHT_EAR", new JSONArray(eeg_right_ear));
+            recordingData.put("EEG_LEFT_FOREHEAD", new JSONArray(eeg_left_forehead));
+            recordingData.put("EEG_RIGHT_FOREHEAD", new JSONArray(eeg_right_forehead));
+
+            recordingData.put("ALPHA_REL_1", new JSONArray(alpha_rel_1));
+            recordingData.put("ALPHA_REL_2", new JSONArray(alpha_rel_2));
+            recordingData.put("ALPHA_REL_3", new JSONArray(alpha_rel_3));
+            recordingData.put("ALPHA_REL_4", new JSONArray(alpha_rel_4));
+
+            recordingData.put("BETA_REL_1", new JSONArray(beta_rel_1));
+            recordingData.put("BETA_REL_2", new JSONArray(beta_rel_2));
+            recordingData.put("BETA_REL_3", new JSONArray(beta_rel_3));
+            recordingData.put("BETA_REL_4", new JSONArray(beta_rel_4));
+
+            recordingData.put("THETA_REL_1", new JSONArray(theta_rel_1));
+            recordingData.put("THETA_REL_2", new JSONArray(theta_rel_2));
+            recordingData.put("THETA_REL_3", new JSONArray(theta_rel_3));
+            recordingData.put("THETA_REL_4", new JSONArray(theta_rel_4));
+
+            recordingData.put("GAMMA_REL_1", new JSONArray(gamma_rel_1));
+            recordingData.put("GAMMA_REL_2", new JSONArray(gamma_rel_2));
+            recordingData.put("GAMMA_REL_3", new JSONArray(gamma_rel_3));
+            recordingData.put("GAMMA_REL_4", new JSONArray(gamma_rel_4));
+
+            recordingData.put("BLINK", new JSONArray(blink));
+
+            Log.v(TAG, "Returning object with " + recordingData.length() + " keys.");
+            callbackContext.success(recordingData);
         } else if (action.equals("testConnection")) {
             if (horseshoe == null) {
                 callbackContext.error("No connection data received.");
@@ -347,19 +553,7 @@ public class Plugin extends CordovaPlugin {
                     if (true || state != ConnectionState.CONNECTED && state != ConnectionState.CONNECTING) {
                         connectionListener.setCallbackContext(callbackContext);
                         final Muse museToConnect = muse;
-                        museToConnect.setPreset(MusePreset.PRESET_14);
-                        museToConnect.registerConnectionListener(connectionListener);
-                        muse.registerDataListener(dataListener,
-                                                  MuseDataPacketType.ACCELEROMETER);
-                        muse.registerDataListener(dataListener,
-                                                  MuseDataPacketType.EEG);
-                        muse.registerDataListener(dataListener,
-                                                  MuseDataPacketType.ALPHA_RELATIVE);
-                        muse.registerDataListener(dataListener,
-                                                  MuseDataPacketType.HORSESHOE);
-                        muse.registerDataListener(dataListener,
-                                                  MuseDataPacketType.ARTIFACTS);
-                        museToConnect.enableDataTransmission(true);
+                        registerDataListeners(museToConnect);
                         Log.i(TAG, "Connecting...");
                         toastShort("Connecting...");
                         try {
@@ -389,6 +583,28 @@ public class Plugin extends CordovaPlugin {
         return connectToMuse(pairedMuses.get(0).getMacAddress(), callbackContext);
     }
     
+    private void registerDataListeners(Muse muse) {
+        muse.setPreset(MusePreset.PRESET_14);
+        muse.registerConnectionListener(connectionListener);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.ACCELEROMETER);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.EEG);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.ALPHA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.BETA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.THETA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.GAMMA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.HORSESHOE);
+        muse.registerDataListener(dataListener,
+                                  MuseDataPacketType.ARTIFACTS);
+        muse.enableDataTransmission(true);
+    }
+
     private void disconnectMuse() {
         if (connectedMuse != null) {
             connectedMuse.disconnect(true);
@@ -418,6 +634,21 @@ public class Plugin extends CordovaPlugin {
         alpha_rel_2 = new LinkedList<String>();
         alpha_rel_3 = new LinkedList<String>();
         alpha_rel_4 = new LinkedList<String>();
+
+        beta_rel_1 = new LinkedList<String>();
+        beta_rel_2 = new LinkedList<String>();
+        beta_rel_3 = new LinkedList<String>();
+        beta_rel_4 = new LinkedList<String>();
+    
+        theta_rel_1 = new LinkedList<String>();
+        theta_rel_2 = new LinkedList<String>();
+        theta_rel_3 = new LinkedList<String>();
+        theta_rel_4 = new LinkedList<String>();
+
+        gamma_rel_1 = new LinkedList<String>();
+        gamma_rel_2 = new LinkedList<String>();
+        gamma_rel_3 = new LinkedList<String>();
+        gamma_rel_4 = new LinkedList<String>();
 
         blink = new LinkedList<String>();
     }

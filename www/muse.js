@@ -54,12 +54,80 @@ Muse.prototype.getEegRightForehead = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Muse", "getEegRightForehead", []);
 }
 
+Muse.prototype.getAlphaRelativeChannel1 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getAlphaRelativeChannel1", []);
+}
+
+Muse.prototype.getAlphaRelativeChannel2 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getAlphaRelativeChannel2", []);
+}
+
+Muse.prototype.getAlphaRelativeChannel3 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getAlphaRelativeChannel3", []);
+}
+
+Muse.prototype.getAlphaRelativeChannel4 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getAlphaRelativeChannel4", []);
+}
+
+Muse.prototype.getBetaRelativeChannel1 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getBetaRelativeChannel1", []);
+}
+
+Muse.prototype.getBetaRelativeChannel2 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getBetaRelativeChannel2", []);
+}
+
+Muse.prototype.getBetaRelativeChannel3 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getBetaRelativeChannel3", []);
+}
+
+Muse.prototype.getBetaRelativeChannel4 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getBetaRelativeChannel4", []);
+}
+
+Muse.prototype.getThetaRelativeChannel1 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getThetaRelativeChannel1", []);
+}
+
+Muse.prototype.getThetaRelativeChannel2 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getThetaRelativeChannel2", []);
+}
+
+Muse.prototype.getThetaRelativeChannel3 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getThetaRelativeChannel3", []);
+}
+
+Muse.prototype.getThetaRelativeChannel4 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getThetaRelativeChannel4", []);
+}
+
+Muse.prototype.getGammaRelativeChannel1 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getGammaRelativeChannel1", []);
+}
+
+Muse.prototype.getGammaRelativeChannel2 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getGammaRelativeChannel2", []);
+}
+
+Muse.prototype.getGammaRelativeChannel3 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getGammaRelativeChannel3", []);
+}
+
+Muse.prototype.getGammaRelativeChannel4 = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getGammaRelativeChannel4", []);
+}
+
 Muse.prototype.getBlink = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Muse", "getBlink", []);
 }
 
 Muse.prototype.testConnection = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Muse", "testConnection", []);
+}
+
+Muse.prototype.getRecordingData = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Muse", "getRecordingData", []);
 }
 
 
