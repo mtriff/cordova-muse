@@ -3,19 +3,12 @@
 - Plugin to interface between a Cordova app and Muse device
 - Currently only supports Android (libraries are currently unavailable for other platforms)
 - Uses libmuse v1.0.1
-- Feedback and PR's welcome!
 
 # Install/Uninstall
 
 To install, from the root of your Cordova app:
 ```
 cordova plugin add https://github.com/mtriff/cordova-muse
-```
-
-Add the following permissions to `platforms/android/AndroidManifest.xml`:
-```
-   <uses-permission android:name="android.permission.BLUETOOTH" />
-   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 ```
 
 To uninstall, from the root of your Cordova app:
