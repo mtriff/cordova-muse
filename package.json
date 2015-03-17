@@ -1,0 +1,18 @@
+{
+    "version": "0.0.1",
+    "name": "com.mtriff.cordova.muse.plugin",
+    "cordova_name": "Muse",
+    "description": "Cordova Muse Plugin",
+    "keywords": [
+        "cordova",
+        "muse"
+    ],
+    "platforms": [
+        "android"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mtriff/cordova-muse.git"
+    },
+    "engines": []
+}
