@@ -2,7 +2,7 @@
 
 - Plugin to interface between a Cordova app and Muse device
 - Currently only supports Android (libraries are currently unavailable for other platforms)
-- Uses libmuse v1.0.1
+- Uses libmuse v1.3.0
 - Feedback and PR's welcome!
 
 # Install/Uninstall
@@ -12,15 +12,9 @@ To install, from the root of your Cordova app:
 cordova plugin add https://github.com/mtriff/cordova-muse
 ```
 
-Add the following permissions to `platforms/android/AndroidManifest.xml`:
-```
-   <uses-permission android:name="android.permission.BLUETOOTH" />
-   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-```
-
 To uninstall, from the root of your Cordova app:
 ```
-cordova plugin remove com.mtriff.cordova.muse.plugin
+cordova plugin rm com.cordova.plugins.muse
 ```
 
 # Documentation
@@ -41,6 +35,10 @@ disconnectMuse(successCallback, errorCallback)
 -----------
 Disconnects from the Muse device if one is connected.
 
+getConnectionState(successCallback, errorCallback)
+-----------
+Returns the status of the connection between the Muse headband and the device.
+
 testConnection(successCallback, errorCallback)
 -----------
 Returns the status of the connection between the Muse headband and the users forehead.
@@ -55,12 +53,47 @@ Possible values are: Good Connection, Weak Connection, and No Connection
 
 startRecording(successCallback, errorCallback)
 -----------
-Triggers the data lists to be refreshed and data begins to be collected.
+Triggers the data lists to be refreshed and data begins to be monitored.
+Returns a JSON object structured as follows containing the data for all of the variables recorded.
+```
+      ACC:[FORWARD_BACKWARD,UP_DOWN,LEFT_RIGHT]
+      other:[LEFT_EAR,LEFT_FOREHEAD,RIGHT_FOREHEAD,RIGHT_EAR]
+```
+
+```
+{
+      ACC: [1.0, 2.0, 3.0],
+      EEG: [1.0, 2.0, 3.0,1.0],
+      ALPHA_ABS: [2.0, 3.0, 4.0,2.0],
+      BETA_ABS:  [2.0, 3.0, 4.0,2.0],
+      DELTA_ABS: [2.0, 3.0, 4.0,2.0],
+      THETA_ABS: [2.0, 3.0, 4.0,2.0],
+      GAMMA_ABS: [2.0, 3.0, 4.0,2.0],
+      ALPHA_REL: [2.0, 3.0, 4.0,2.0],
+      BETA_REL:  [2.0, 3.0, 4.0,2.0],
+      DELTA_REL: [2.0, 3.0, 4.0,2.0],
+      THETA_REL: [2.0, 3.0, 4.0,2.0],
+      GAMMA_REL: [2.0, 3.0, 4.0,2.0],
+      TIMESTAMP: 1447457878862
+}
+```
+
+setWatch(successCallback, errorCallback)
+-----------
+set a callback to monitor the live data as the packet has been received(same as above)
 
 stopRecording(successCallback, errorCallback)
 -----------
 Stops recording data.  Any events and data received by the app from the Muse device will be ignored.
 
+getBlink(successCallback, errorCallback)
+-----------
+Retrieves the timestamps (in milliseconds) that it was recorded that the user blinked.
+```
+BLINK: [1447457878862, 1447457878992, 1447457879234]
+```
+
+<s>
 getRecordingData(successCallback, errorCallback)
 -----------
 Returns a JSON object structured as follows containing the data for all of the variables recorded.
@@ -185,7 +218,4 @@ Retrieves the Gamma Relative channel 3 data from the previous recording.
 getGammaRelativeChannel4(successCallback, errorCallback)
 -----------
 Retrieves the Gamma Relative channel 4 data from the previous recording.
-
-getBlink(successCallback, errorCallback)
------------
-Retrieves the timestamps (in milliseconds) that it was recorded that the user blinked.
+</s>
