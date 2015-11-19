@@ -32,38 +32,49 @@ public class Plugin extends CordovaPlugin {
     private boolean recordData;
 
     // Data Packets
-    private List<String> acc_forward_backward;
-    private List<String> acc_up_down;
-    private List<String> acc_left_right;
+    private List<String> acc;
+    private List<String> eeg;
 
-    private List<String> eeg_left_ear;
-    private List<String> eeg_left_forehead;
-    private List<String> eeg_right_forehead;
-    private List<String> eeg_right_ear;
+    private List<String> alpha_abs;
+    private List<String> beta_abs;
+    private List<String> delta_abs;
+    private List<String> theta_abs;
+    private List<String> gamma_abs;
 
-    private List<String> alpha_rel_1;
-    private List<String> alpha_rel_2;
-    private List<String> alpha_rel_3;
-    private List<String> alpha_rel_4;
-    
-    private List<String> beta_rel_1;
-    private List<String> beta_rel_2;
-    private List<String> beta_rel_3;
-    private List<String> beta_rel_4;
-    
-    private List<String> theta_rel_1;
-    private List<String> theta_rel_2;
-    private List<String> theta_rel_3;
-    private List<String> theta_rel_4;
-
-    private List<String> gamma_rel_1;
-    private List<String> gamma_rel_2;
-    private List<String> gamma_rel_3;
-    private List<String> gamma_rel_4;
+    private List<String> alpha_rel;
+    private List<String> beta_rel;
+    private List<String> delta_rel;
+    private List<String> theta_rel;
+    private List<String> gamma_rel;
 
     private List<String> blink;
 
     private List<Double> horseshoe;
+
+  /*
+  private List<String> acc_forward_backward;
+  private List<String> acc_up_down;
+  private List<String> acc_left_right;
+  private List<String> eeg_left_ear;
+  private List<String> eeg_left_forehead;
+  private List<String> eeg_right_forehead;
+  private List<String> eeg_right_ear;
+  private List<String> alpha_rel_1;
+  private List<String> alpha_rel_2;
+  private List<String> alpha_rel_3;
+  private List<String> alpha_rel_4;
+  private List<String> beta_rel_1;
+  private List<String> beta_rel_2;
+  private List<String> beta_rel_3;
+  private List<String> beta_rel_4;
+  private List<String> theta_rel_1;
+  private List<String> theta_rel_2;
+  private List<String> theta_rel_3;
+  private List<String> theta_rel_4;
+  private List<String> gamma_rel_1;
+  private List<String> gamma_rel_2;
+  private List<String> gamma_rel_3;
+  private List<String> gamma_rel_4;*/
 
     class ConnectionListener extends MuseConnectionListener {
 
@@ -71,7 +82,7 @@ public class Plugin extends CordovaPlugin {
 
         ConnectionListener() {
         }
-        
+
         public void setCallbackContext(CallbackContext callbackContext) {
             this.callbackContext = callbackContext;
         }
@@ -80,9 +91,9 @@ public class Plugin extends CordovaPlugin {
         public void receiveMuseConnectionPacket(MuseConnectionPacket p) {
             final ConnectionState current = p.getCurrentConnectionState();
             final String status = p.getPreviousConnectionState().toString() +
-                         " -> " + current;
+                    " -> " + current;
             final String full = "Muse " + p.getSource().getMacAddress() +
-                                " " + status;
+                    " " + status;
             Log.i(TAG, full);
             if (current == ConnectionState.CONNECTED) {
                 Log.i(TAG, "Muse connected");
@@ -108,14 +119,20 @@ public class Plugin extends CordovaPlugin {
     }
 
     class DataListener extends MuseDataListener {
+        CallbackContext callbackContext;
+
         DataListener() {
+        }
+
+        public void setCallbackContext(CallbackContext callbackContext) {
+            this.callbackContext = callbackContext;
         }
 
         @Override
         public void receiveMuseDataPacket(MuseDataPacket p) {
             Log.v(TAG, "Received data packet of type " + p.getPacketType() + " recordData set to " + recordData);
             MuseDataPacketType packetType = p.getPacketType();
-            if(recordData || packetType == MuseDataPacketType.HORSESHOE) {
+            if (recordData || packetType == MuseDataPacketType.HORSESHOE) {
                 switch (packetType) {
                     case EEG:
                         updateEeg(p.getValues());
@@ -123,23 +140,72 @@ public class Plugin extends CordovaPlugin {
                     case ACCELEROMETER:
                         updateAccelerometer(p.getValues());
                         break;
+                    case ALPHA_ABSOLUTE:
+                        updateAbsolute(alpha_abs, p.getValues());
+                        break;
+                    case BETA_ABSOLUTE:
+                        updateAbsolute(beta_abs, p.getValues());
+                        break;
+                    case DELTA_ABSOLUTE:
+                        updateAbsolute(delta_abs, p.getValues());
+                        break;
+                    case THETA_ABSOLUTE:
+                        updateAbsolute(theta_abs, p.getValues());
+                        break;
+                    case GAMMA_ABSOLUTE:
+                        updateAbsolute(gamma_abs, p.getValues());
+                        break;
                     case ALPHA_RELATIVE:
-                        updateAlphaRelative(p.getValues());
+                        updateRelative(alpha_rel, p.getValues());
                         break;
                     case BETA_RELATIVE:
-                        updateBetaRelative(p.getValues());
+                        updateRelative(beta_rel, p.getValues());
+                        break;
+                    case DELTA_RELATIVE:
+                        updateRelative(delta_rel, p.getValues());
                         break;
                     case THETA_RELATIVE:
-                        updateThetaRelative(p.getValues());
+                        updateRelative(theta_rel, p.getValues());
                         break;
                     case GAMMA_RELATIVE:
-                        updateGammaRelative(p.getValues());
+                        updateRelative(gamma_rel, p.getValues());
                         break;
                     case HORSESHOE:
                         updateHorseshoe(p.getValues());
                         break;
                     default:
                         break;
+                }
+                if (callbackContext != null) {
+                    //Log.v(TAG, "callbackContext JSONObject");
+                    JSONObject obj = null;
+                    PluginResult pluginResult = null;
+                    try {
+                        obj = new JSONObject();
+                        obj.put("ACC", new JSONArray(acc));
+                        obj.put("EEG", new JSONArray(eeg));
+                        //CHANNEL_ABS
+                        obj.put("ALPHA_ABS", new JSONArray(alpha_abs));
+                        obj.put("BETA_ABS", new JSONArray(beta_abs));
+                        obj.put("DELTA_ABS", new JSONArray(delta_abs));
+                        obj.put("THETA_ABS", new JSONArray(theta_abs));
+                        obj.put("GAMMA_ABS", new JSONArray(gamma_abs));
+                        //CHANNEL_REL
+                        obj.put("ALPHA_REL", new JSONArray(alpha_rel));
+                        obj.put("BETA_REL", new JSONArray(beta_rel));
+                        obj.put("DELTA_REL", new JSONArray(delta_rel));
+                        obj.put("THETA_REL", new JSONArray(theta_rel));
+                        obj.put("GAMMA_REL", new JSONArray(gamma_rel));
+                        //obj.put("BLINK", new JSONArray(blink));
+                        obj.put("TIMESTAMP", System.currentTimeMillis());
+                        pluginResult = new PluginResult(PluginResult.Status.OK, obj);
+                    } catch (JSONException e) {
+                        Log.e(TAG, e.toString());
+                        pluginResult = new PluginResult(PluginResult.Status.JSON_EXCEPTION, "Json exception at receiveMuseDataPacket");
+                    } finally {
+                        pluginResult.setKeepCallback(true);
+                        callbackContext.sendPluginResult(pluginResult);
+                    }
                 }
             }
         }
@@ -148,74 +214,156 @@ public class Plugin extends CordovaPlugin {
         public void receiveMuseArtifactPacket(MuseArtifactPacket p) {
             if (p.getHeadbandOn() && p.getBlink()) {
                 Log.i(TAG, "blink");
-                Calendar cal = Calendar.getInstance();
-                blink.add("" + cal.getTimeInMillis());
+                //Calendar cal = Calendar.getInstance();cal.getTimeInMillis()
+                blink.add(String.valueOf(System.currentTimeMillis()));
             }
         }
 
         private void updateAccelerometer(final ArrayList<Double> data) {
-            acc_forward_backward.add(String.format(
-                "%6.2f", data.get(Accelerometer.FORWARD_BACKWARD.ordinal())));
+            acc.clear();
+            acc.add(String.format(
+                    "%6.2f", data.get(Accelerometer.FORWARD_BACKWARD.ordinal())));
+            acc.add(String.format(
+                    "%6.2f", data.get(Accelerometer.UP_DOWN.ordinal())));
+            acc.add(String.format(
+                    "%6.2f", data.get(Accelerometer.LEFT_RIGHT.ordinal())));
+
+            /*acc_forward_backward.add(String.format(
+                    "%6.2f", data.get(Accelerometer.FORWARD_BACKWARD.ordinal())));
             acc_up_down.add(String.format(
-                "%6.2f", data.get(Accelerometer.UP_DOWN.ordinal())));
+                    "%6.2f", data.get(Accelerometer.UP_DOWN.ordinal())));
             acc_left_right.add(String.format(
-                "%6.2f", data.get(Accelerometer.LEFT_RIGHT.ordinal())));
+                    "%6.2f", data.get(Accelerometer.LEFT_RIGHT.ordinal())));*/
         }
 
         private void updateEeg(final ArrayList<Double> data) {
-            eeg_left_ear.add(String.format(
-                "%6.2f", data.get(Eeg.TP9.ordinal())));
+            eeg.clear();
+            eeg.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
+            eeg.add(String.format(
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
+            eeg.add(String.format(
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
+            eeg.add(String.format(
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+
+            /*eeg_left_ear.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
             eeg_left_forehead.add(String.format(
-                "%6.2f", data.get(Eeg.FP1.ordinal())));
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
             eeg_right_forehead.add(String.format(
-                "%6.2f", data.get(Eeg.FP2.ordinal())));
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
             eeg_right_ear.add(String.format(
-                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));*/
         }
 
-        private void updateAlphaRelative(final ArrayList<Double> data) {
+        private void updateAbsolute(List<String> abs, final ArrayList<Double> data) {
+            abs.clear();
+            abs.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
+            abs.add(String.format(
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
+            abs.add(String.format(
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
+            abs.add(String.format(
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+
+        private void updateRelative(List<String> rel, final ArrayList<Double> data) {
+            rel.clear();
+            rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
+            rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
+            rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
+            rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }
+
+       /* private void updateAlphaRelative(final ArrayList<Double> data) {
+            alpha_rel.clear();
+            alpha_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
+            alpha_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
+            alpha_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
+            alpha_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+
             alpha_rel_1.add(String.format(
-                "%6.2f", data.get(Eeg.TP9.ordinal())));
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
             alpha_rel_2.add(String.format(
-                "%6.2f", data.get(Eeg.FP1.ordinal())));
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
             alpha_rel_3.add(String.format(
-                "%6.2f", data.get(Eeg.FP2.ordinal())));
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
             alpha_rel_4.add(String.format(
-                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
         }
 
         private void updateBetaRelative(final ArrayList<Double> data) {
+            beta_rel.clear();
+            beta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
+            beta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
+            beta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
+            beta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+
             beta_rel_1.add(String.format(
-                "%6.2f", data.get(Eeg.TP9.ordinal())));
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
             beta_rel_2.add(String.format(
-                "%6.2f", data.get(Eeg.FP1.ordinal())));
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
             beta_rel_3.add(String.format(
-                "%6.2f", data.get(Eeg.FP2.ordinal())));
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
             beta_rel_4.add(String.format(
-                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
         }
 
         private void updateThetaRelative(final ArrayList<Double> data) {
+            theta_rel.clear();
+            theta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
+            theta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
+            theta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
+            theta_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+
             theta_rel_1.add(String.format(
-                "%6.2f", data.get(Eeg.TP9.ordinal())));
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
             theta_rel_2.add(String.format(
-                "%6.2f", data.get(Eeg.FP1.ordinal())));
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
             theta_rel_3.add(String.format(
-                "%6.2f", data.get(Eeg.FP2.ordinal())));
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
             theta_rel_4.add(String.format(
-                "%6.2f", data.get(Eeg.TP10.ordinal())));
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
         }
 
         private void updateGammaRelative(final ArrayList<Double> data) {
+            gamma_rel.clear();
+            gamma_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
+            gamma_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
+            gamma_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
+            gamma_rel.add(String.format(
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+
             gamma_rel_1.add(String.format(
-                "%6.2f", data.get(Eeg.TP9.ordinal())));
+                    "%6.2f", data.get(Eeg.TP9.ordinal())));
             gamma_rel_2.add(String.format(
-                "%6.2f", data.get(Eeg.FP1.ordinal())));
+                    "%6.2f", data.get(Eeg.FP1.ordinal())));
             gamma_rel_3.add(String.format(
-                "%6.2f", data.get(Eeg.FP2.ordinal())));
+                    "%6.2f", data.get(Eeg.FP2.ordinal())));
             gamma_rel_4.add(String.format(
-                "%6.2f", data.get(Eeg.TP10.ordinal())));
-        }
+                    "%6.2f", data.get(Eeg.TP10.ordinal())));
+        }*/
 
         private void updateHorseshoe(final ArrayList<Double> data) {
             horseshoe = data;
@@ -248,10 +396,10 @@ public class Plugin extends CordovaPlugin {
     /**
      * Executes the request and returns PluginResult.
      *
-     * @param action            The action to execute.
-     * @param args              JSONArry of arguments for the plugin.
-     * @param callbackContext   The callback id used when calling back into JavaScript.
-     * @return                  True if the action was valid, false if not.
+     * @param action          The action to execute.
+     * @param args            JSONArry of arguments for the plugin.
+     * @param callbackContext The callback id used when calling back into JavaScript.
+     * @return True if the action was valid, false if not.
      */
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
         Log.i(TAG, "Action received: " + action);
@@ -260,23 +408,81 @@ public class Plugin extends CordovaPlugin {
             if (museList != null) {
                 JSONArray jsonMuseList = new JSONArray(Arrays.asList(museList));
                 callbackContext.success(jsonMuseList);
+            } else {
+                callbackContext.error("MuseList empty.");
             }
+            /*PluginResult result = new PluginResult(PluginResult.Status.OK, "YOUR_success_MESSAGE");
+            result.setKeepCallback(true);
+            callbackContext.sendPluginResult(result);*/
         } else if (action.equals("connectToMuse")) {
             connectToMuse(callbackContext);
         } else if (action.equals("disconnectMuse")) {
             disconnectMuse();
-            toastShort("Disconnected " + connectedMuse.getMacAddress());
-            connectedMuse = null;
             callbackContext.success("Disconnected.");
+        } else if (action.equals("getConnectionState")) {
+            getConnectionState(callbackContext);
         } else if (action.equals("startRecording")) {
-            startRecording();
+            startRecording(callbackContext);
             toastShort("Started Recording");
             callbackContext.success("Started Recording");
+        } else if (action.equals("setWatch")) {
+            setWatch(callbackContext);
         } else if (action.equals("stopRecording")) {
             stopRecording();
             toastShort("Stopped Recording");
             callbackContext.success("Stopped Recording");
-        } else if (action.equals("getAccForwardBackward")) {
+        } else if (action.equals("getBlink")) {
+            if (blink == null) {
+                callbackContext.error("No data has been recorded.");
+            }
+            Log.v(TAG, "Returning array of length " + blink.size());
+            Log.v(TAG, "First value is " + blink.get(0));
+            callbackContext.success(new JSONArray(blink));
+        } else if (action.equals("testConnection")) {
+            if (horseshoe == null) {
+                callbackContext.error("No connection data received.");
+            }
+            Log.v(TAG, "Connection data is " + horseshoe.toString());
+            String status = "Left Ear - ";
+            Double value = horseshoe.get(0);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            status += "\nLeft Forehead - ";
+            value = horseshoe.get(1);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            status += "\nRight Forehead - ";
+            value = horseshoe.get(2);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            status += "\nRight Ear - ";
+            value = horseshoe.get(3);
+            if (value == 1.0) {
+                status += "Good Connection";
+            } else if (value < 4.0) {
+                status += "Weak Connection";
+            } else {
+                status += "No Connection";
+            }
+            toastLong(status);
+            callbackContext.success(status);
+        }
+          /*else if (action.equals("getAccForwardBackward")) {
             if (acc_forward_backward == null) {
                 callbackContext.error("No data has been recorded.");
             }
@@ -435,19 +641,13 @@ public class Plugin extends CordovaPlugin {
             Log.v(TAG, "Returning array of length " + gamma_rel_4.size());
             Log.v(TAG, "First value is " + gamma_rel_4.get(0));
             callbackContext.success(new JSONArray(gamma_rel_4));
-        } else if (action.equals("getBlink")) {
-            if (blink == null) {
-                callbackContext.error("No data has been recorded.");
-            }
-            Log.v(TAG, "Returning array of length " + blink.size());
-            Log.v(TAG, "First value is " + blink.get(0));
-            callbackContext.success(new JSONArray(blink));
-        } else if (action.equals("getRecordingData")) {
+        } */
+        /*else if (action.equals("getRecordingData")) {
             JSONObject recordingData = new JSONObject();
             recordingData.put("ACC_LEFT_RIGHT", new JSONArray(acc_left_right));
             recordingData.put("ACC_FORWARD_BACKWARD", new JSONArray(acc_forward_backward));
             recordingData.put("ACC_UP_DOWN", new JSONArray(acc_up_down));
-            
+
             recordingData.put("EEG_LEFT_EAR", new JSONArray(eeg_left_ear));
             recordingData.put("EEG_RIGHT_EAR", new JSONArray(eeg_right_ear));
             recordingData.put("EEG_LEFT_FOREHEAD", new JSONArray(eeg_left_forehead));
@@ -476,51 +676,8 @@ public class Plugin extends CordovaPlugin {
             recordingData.put("BLINK", new JSONArray(blink));
 
             Log.v(TAG, "Returning object with " + recordingData.length() + " keys.");
-            callbackContext.success(recordingData);
-        } else if (action.equals("testConnection")) {
-            if (horseshoe == null) {
-                callbackContext.error("No connection data received.");
-            }
-            Log.v(TAG, "Connection data is " + horseshoe.toString());
-            String status = "Left Ear - ";
-            Double value = horseshoe.get(0);
-            if (value == 1.0) {
-                status += "Good Connection";
-            } else if (value < 4.0) {
-                status += "Weak Connection";
-            } else {
-                status += "No Connection";
-            }
-            status += "\nLeft Forehead - ";
-            value = horseshoe.get(1);
-            if (value == 1.0) {
-                status += "Good Connection";
-            } else if (value < 4.0) {
-                status += "Weak Connection";
-            } else {
-                status += "No Connection";
-            }
-            status += "\nRight Forehead - ";
-            value = horseshoe.get(2);
-            if (value == 1.0) {
-                status += "Good Connection";
-            } else if (value < 4.0) {
-                status += "Weak Connection";
-            } else {
-                status += "No Connection";
-            }
-            status += "\nRight Ear - ";
-            value = horseshoe.get(3);
-            if (value == 1.0) {
-                status += "Good Connection";
-            } else if (value < 4.0) {
-                status += "Weak Connection";
-            } else {
-                status += "No Connection";
-            }
-            toastLong(status);
-            callbackContext.success(status);
-        }
+            callbackContext.error("Not supported any more");
+        }*/
         else {
             return false;
         }
@@ -530,9 +687,10 @@ public class Plugin extends CordovaPlugin {
     //--------------------------------------------------------------------------
     // LOCAL METHODS
     //--------------------------------------------------------------------------
+
     /**
-      * Returns an array of the MAC addresses of all the Muses attached to the device
-      */
+     * Returns an array of the MAC addresses of all the Muses attached to the device
+     */
     private String[] getMuseList() {
         MuseManager.refreshPairedMuses();
         pairedMuses = MuseManager.getPairedMuses();
@@ -550,7 +708,8 @@ public class Plugin extends CordovaPlugin {
                 try {
                     ConnectionState state = muse.getConnectionState();
                     Log.i(TAG, "ConnectionState: " + state.toString());
-                    if (true || state != ConnectionState.CONNECTED && state != ConnectionState.CONNECTING) {
+                    toastShort("ConnectionState: " + state.toString());
+                    if (state != ConnectionState.CONNECTED && state != ConnectionState.CONNECTING) {
                         connectionListener.setCallbackContext(callbackContext);
                         final Muse museToConnect = muse;
                         registerDataListeners(museToConnect);
@@ -565,12 +724,13 @@ public class Plugin extends CordovaPlugin {
                         } catch (Exception e) {
                             Log.e(TAG, e.toString());
                         }
-                        connectedMuse = muse;                        
+                        connectedMuse = muse;
+
                     } else {
                         Log.i(TAG, "Device is already connected or is connecting." + state);
-                        callbackContext.success(state.toString());
                     }
-                } catch(Exception ex) {
+                    callbackContext.success(state.toString());
+                } catch (Exception ex) {
                     return ex.getMessage();
                 }
             }
@@ -582,55 +742,97 @@ public class Plugin extends CordovaPlugin {
         getMuseList();
         return connectToMuse(pairedMuses.get(0).getMacAddress(), callbackContext);
     }
-    
+
+    private void getConnectionState(CallbackContext callbackContext) {
+        callbackContext.success(pairedMuses.get(0).getConnectionState().toString());
+    }
+
     private void registerDataListeners(Muse muse) {
         muse.setPreset(MusePreset.PRESET_14);
         muse.registerConnectionListener(connectionListener);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.ACCELEROMETER);
+                MuseDataPacketType.ACCELEROMETER);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.EEG);
+                MuseDataPacketType.EEG);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.ALPHA_RELATIVE);
+                MuseDataPacketType.ALPHA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.BETA_RELATIVE);
+                MuseDataPacketType.BETA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.THETA_RELATIVE);
+                MuseDataPacketType.DELTA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.GAMMA_RELATIVE);
+                MuseDataPacketType.THETA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.HORSESHOE);
+                MuseDataPacketType.GAMMA_ABSOLUTE);
         muse.registerDataListener(dataListener,
-                                  MuseDataPacketType.ARTIFACTS);
+                MuseDataPacketType.ALPHA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                MuseDataPacketType.BETA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                MuseDataPacketType.DELTA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                MuseDataPacketType.THETA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                MuseDataPacketType.GAMMA_RELATIVE);
+        muse.registerDataListener(dataListener,
+                MuseDataPacketType.HORSESHOE);
+        muse.registerDataListener(dataListener,
+                MuseDataPacketType.ARTIFACTS);
         muse.enableDataTransmission(true);
     }
 
     private void disconnectMuse() {
         if (connectedMuse != null) {
+            toastShort("Disconnected " + connectedMuse.getMacAddress());
             connectedMuse.disconnect(true);
+            connectedMuse = null;
         }
     }
 
-    private void startRecording() {
+    private void startRecording(CallbackContext callbackContext) {
         resetDataPacketLists();
         recordData = true;
     }
 
+    private void setWatch(CallbackContext callbackContext) {
+        dataListener.setCallbackContext(callbackContext);
+    }
+
     private void stopRecording() {
+        clearWatch();
         recordData = false;
     }
 
-    private void resetDataPacketLists() {
-        acc_forward_backward = new LinkedList<String>();
-        acc_up_down = new LinkedList<String>();
-        acc_left_right = new LinkedList<String>();
+    private void clearWatch() {
+        dataListener.setCallbackContext(null);
+    }
 
-        eeg_left_ear = new LinkedList<String>();
+
+    private void resetDataPacketLists() {
+        acc = new LinkedList<String>();
+        /*acc_forward_backward = new LinkedList<String>();
+        acc_up_down = new LinkedList<String>();
+        acc_left_right = new LinkedList<String>();*/
+
+        eeg = new LinkedList<String>();
+        /*eeg_left_ear = new LinkedList<String>();
         eeg_left_forehead = new LinkedList<String>();
         eeg_right_forehead = new LinkedList<String>();
-        eeg_right_ear = new LinkedList<String>();
+        eeg_right_ear = new LinkedList<String>();*/
 
-        alpha_rel_1 = new LinkedList<String>();
+        alpha_abs = new LinkedList<String>();
+        beta_abs = new LinkedList<String>();
+        delta_abs = new LinkedList<String>();
+        theta_abs = new LinkedList<String>();
+        gamma_abs = new LinkedList<String>();
+
+        alpha_rel = new LinkedList<String>();
+        beta_rel = new LinkedList<String>();
+        delta_rel = new LinkedList<String>();
+        theta_rel = new LinkedList<String>();
+        gamma_rel = new LinkedList<String>();
+
+        /*alpha_rel_1 = new LinkedList<String>();
         alpha_rel_2 = new LinkedList<String>();
         alpha_rel_3 = new LinkedList<String>();
         alpha_rel_4 = new LinkedList<String>();
@@ -639,7 +841,7 @@ public class Plugin extends CordovaPlugin {
         beta_rel_2 = new LinkedList<String>();
         beta_rel_3 = new LinkedList<String>();
         beta_rel_4 = new LinkedList<String>();
-    
+
         theta_rel_1 = new LinkedList<String>();
         theta_rel_2 = new LinkedList<String>();
         theta_rel_3 = new LinkedList<String>();
@@ -648,7 +850,7 @@ public class Plugin extends CordovaPlugin {
         gamma_rel_1 = new LinkedList<String>();
         gamma_rel_2 = new LinkedList<String>();
         gamma_rel_3 = new LinkedList<String>();
-        gamma_rel_4 = new LinkedList<String>();
+        gamma_rel_4 = new LinkedList<String>();*/
 
         blink = new LinkedList<String>();
     }
