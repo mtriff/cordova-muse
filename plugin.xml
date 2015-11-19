@@ -18,6 +18,11 @@
             </feature>
         </config-file>
 
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.BLUETOOTH" />
+            <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+        </config-file>
+
         <source-file src="src/android/libs/libmuseandroid.jar" target-dir="libs" />
         <source-file src="src/android/libs/x86/libmuse_android.so" target-dir="libs/x86/" />
         <source-file src="src/android/libs/armeabi/libmuse_android.so" target-dir="libs/armeabi/" />
